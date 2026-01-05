@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout - ShopHub{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1>Checkout</h1>
+        <p>Complete your order</p>
+    </div>
+</section>
+
+<section class="checkout-section">
+    <div class="container">
+        <div class="checkout-wrapper">
+            <div class="checkout-form-wrapper">
+                <h2>Shipping Information</h2>
+                <form method="POST" id="checkout-form" onsubmit="return validateCheckout()">
+                    <input type="hidden" name="cart_data" id="cart-data">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="customer_name">Full Name *</label>
+                            <input type="text" id="customer_name" name="customer_name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="customer_email">Email *</label>
+                            <input type="email" id="customer_email" name="customer_email" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="customer_phone">Phone Number *</label>
+                        <input type="tel" id="customer_phone" name="customer_phone" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="shipping_address">Shipping Address *</label>
+                        <textarea id="shipping_address" name="shipping_address" rows="3" required></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="city">City *</label>
+                            <input type="text" id="city" name="city" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="state">State *</label>
+                            <input type="text" id="state" name="state" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="postal_code">Postal Code *</label>
+                        <input type="text" id="postal_code" name="postal_code" required>
+                    </div>
+                    
+                    <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Payment Method *</h3>
+                    <div class="payment-methods">
+                        <label class="payment-method">
+                            <input type="radio" name="payment_method" value="card" required>
+                            <div class="payment-method-content">
+                                <i class="fas fa-credit-card"></i>
+                                <span>Debit/Credit Card</span>
+                            </div>
+                        </label>
+                        
+                        <label class="payment-method">
+                            <input type="radio" name="payment_method" value="bank_transfer" required>
+                            <div class="payment-method-content">
+                                <i class="fas fa-university"></i>
+                                <span>Bank Transfer</span>
+                            </div>
+                        </label>
+                        
+                        <label class="payment-method">
+                            <input type="radio" name="payment_method" value="pay_on_delivery" required>
+                            <div class="payment-method-content">
+                                <i class="fas fa-truck"></i>
+                                <span>Pay on Delivery</span>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-large" style="width: 100%; margin-top: 2rem;">
+                        <i class="fas fa-lock"></i> Complete Order
+                    </button>
+                </form>
+            </div>
+            
+            <div class="checkout-summary">
+                <h2>Order Summary</h2>
+                <div id="checkout-items"></div>
+                <div class="checkout-total">
+                    <div class="total-row">
+                        <span>Subtotal:</span>
+                        <span id="subtotal">₦0.00</span>
+                    </div>
+                    <div class="total-row">
+                        <span>Shipping:</span>
+                        <span>Free</span>
+                    </div>
+                    <div class="total-row total-final">
+                        <span>Total:</span>
+                        <span id="total-amount">₦0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCheckoutItems();
+    });
+    
+    async function loadCheckoutItems() {
+        const cart = JSON.parse(localStorage.getItem('cart')) || [];
+        const checkoutItems = document.getElementById('checkout-items');
+        const cartDataInput = document.getElementById('cart-data');
+        
+        if (cart.length === 0) {
+            checkoutItems.innerHTML = '<p>Your cart is empty.</p>';
+            window.location.href = '{{ url_for("cart") }}';
+            return;
+        }
+        
+        // Set cart data in hidden input
+        cartDataInput.value = JSON.stringify(cart);
+        
+        try {
+            const productIds = cart.map(item => item.id).join(',');
+            const response = await fetch(`/api/cart-products?ids=${productIds}`);
+            const products = await response.json();
+            
+            let subtotal = 0;
+            let itemsHTML = '<div class="checkout-items-list">';
+            
+            cart.forEach(cartItem => {
+                const product = products.find(p => p.id === cartItem.id);
+                if (product) {
+                    const itemTotal = product.price * cartItem.quantity;
+                    subtotal += itemTotal;
+                    itemsHTML += `
+                        <div class="checkout-item">
+                            <img src="${product.image}" alt="${product.name}" class="checkout-item-image">
+                            <div class="checkout-item-info">
+                                <h4>${product.name}</h4>
+                                <p>Quantity: ${cartItem.quantity}</p>
+                            </div>
+                            <div class="checkout-item-price">
+                                ₦${itemTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            itemsHTML += '</div>';
+            checkoutItems.innerHTML = itemsHTML;
+            
+            document.getElementById('subtotal').textContent = `₦${subtotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('total-amount').textContent = `₦${subtotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        } catch (error) {
+            console.error('Error loading checkout items:', error);
+        }
+    }
+    
+    function validateCheckout() {
+        const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
+        if (!paymentMethod) {
+            alert('Please select a payment method');
+            return false;
+        }
+        return true;
+    }
+</script>
+{% endblock %}
+
+

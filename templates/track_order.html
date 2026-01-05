@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Track Your Order - ShopHub{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1>Track Your Order</h1>
+        <p>Enter your order details to view order status</p>
+    </div>
+</section>
+
+<section class="track-order-section">
+    <div class="container">
+        <div class="track-order-wrapper">
+            <div class="track-order-form-card">
+                <h2>Find Your Order</h2>
+                <p style="color: var(--text-light); margin-bottom: 2rem;">
+                    Enter your order number and email address to track your order status.
+                </p>
+                <p style="margin-bottom: 2rem;">
+                    <a href="{{ url_for('my_orders') }}" style="color: var(--primary-color); text-decoration: underline;">
+                        <i class="fas fa-list"></i> View all my orders instead
+                    </a>
+                </p>
+                
+                {% if error %}
+                <div class="alert alert-error">
+                    <i class="fas fa-exclamation-circle"></i> {{ error }}
+                </div>
+                {% endif %}
+                
+                <form method="POST" class="track-order-form">
+                    <div class="form-group">
+                        <label for="order_number">Order Number *</label>
+                        <input type="text" id="order_number" name="order_number" 
+                               placeholder="e.g., ORD12345678" required 
+                               value="{{ request.form.get('order_number', '') or request.args.get('order_number', '') }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email Address *</label>
+                        <input type="email" id="email" name="email" 
+                               placeholder="your.email@example.com" required
+                               value="{{ request.form.get('email', '') or request.args.get('email', '') }}">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-large" style="width: 100%;">
+                        <i class="fas fa-search"></i> Track Order
+                    </button>
+                </form>
+            </div>
+            
+            {% if order %}
+            <div class="order-status-card">
+                <div class="order-status-header">
+                    <h2>Order Status</h2>
+                    <span class="order-number-badge">{{ order.order_number }}</span>
+                </div>
+                
+                <div class="status-timeline">
+                    <div class="timeline-item {% if order.status == 'pending' or order.status in ['processing', 'shipped', 'delivered'] %}active{% endif %}">
+                        <div class="timeline-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h4>Order Placed</h4>
+                            <p>{{ order.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item {% if order.status in ['processing', 'shipped', 'delivered'] %}active{% endif %}">
+                        <div class="timeline-icon">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h4>Processing</h4>
+                            <p>Your order is being prepared</p>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item {% if order.status in ['shipped', 'delivered'] %}active{% endif %}">
+                        <div class="timeline-icon">
+                            <i class="fas fa-shipping-fast"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h4>Shipped</h4>
+                            <p>Your order is on the way</p>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item {% if order.status == 'delivered' %}active{% endif %}">
+                        <div class="timeline-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h4>Delivered</h4>
+                            <p>Order has been delivered</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="order-details-summary">
+                    <h3>Order Details</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Order Number:</span>
+                            <span class="detail-value">{{ order.order_number }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Order Date:</span>
+                            <span class="detail-value">{{ order.created_at.strftime('%B %d, %Y') }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Total Amount:</span>
+                            <span class="detail-value">{{ order.total_amount|currency }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Payment Status:</span>
+                            <span class="status-badge {{ order.payment_status }}">{{ order.payment_status.title() }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Current Status:</span>
+                            <span class="status-badge {{ order.status }}">{{ order.status.title() }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Payment Method:</span>
+                            <span class="detail-value">{{ order.payment_method.replace('_', ' ').title() }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="order-items-summary">
+                    <h3>Order Items</h3>
+                    <div class="order-items-list">
+                        {% for item in order.items %}
+                        <div class="order-item-row">
+                            <div class="order-item-name">{{ item.product_name }}</div>
+                            <div class="order-item-quantity">Qty: {{ item.quantity }}</div>
+                            <div class="order-item-price">{{ item.subtotal|currency }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="order-total-row">
+                        <span>Total:</span>
+                        <span class="total-amount">{{ order.total_amount|currency }}</span>
+                    </div>
+                </div>
+                
+                <div class="shipping-details">
+                    <h3>Shipping Address</h3>
+                    <p>{{ order.customer_name }}</p>
+                    <p>{{ order.shipping_address }}</p>
+                    <p>{{ order.city }}, {{ order.state }} {{ order.postal_code }}</p>
+                    <p>Phone: {{ order.customer_phone }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+

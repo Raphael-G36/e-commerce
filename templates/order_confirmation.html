@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Order Confirmation - ShopHub{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1>Order Confirmed!</h1>
+        <p>Thank you for your purchase</p>
+    </div>
+</section>
+
+<section class="confirmation-section">
+    <div class="container">
+        <div class="confirmation-card">
+            <div class="confirmation-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2>Order Placed Successfully</h2>
+            <p class="order-number">Order Number: <strong>{{ order.order_number }}</strong></p>
+            
+            <div class="confirmation-details">
+                <div class="detail-row">
+                    <span>Order Date:</span>
+                    <span>{{ order.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                </div>
+                <div class="detail-row">
+                    <span>Payment Method:</span>
+                    <span>{{ order.payment_method.replace('_', ' ').title() }}</span>
+                </div>
+                <div class="detail-row">
+                    <span>Payment Status:</span>
+                    <span class="status-badge {{ order.payment_status }}">{{ order.payment_status.title() }}</span>
+                </div>
+                <div class="detail-row">
+                    <span>Total Amount:</span>
+                    <span class="total-amount">{{ order.total_amount|currency }}</span>
+                </div>
+            </div>
+            
+            <div class="shipping-info">
+                <h3>Shipping Address</h3>
+                <p>{{ order.customer_name }}</p>
+                <p>{{ order.shipping_address }}</p>
+                <p>{{ order.city }}, {{ order.state }} {{ order.postal_code }}</p>
+                <p>Phone: {{ order.customer_phone }}</p>
+                <p>Email: {{ order.customer_email }}</p>
+            </div>
+            
+            <div class="order-items">
+                <h3>Order Items</h3>
+                <table class="order-items-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items %}
+                        <tr>
+                            <td>{{ item.product_name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ item.price|currency }}</td>
+                            <td>{{ item.subtotal|currency }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3"><strong>Total:</strong></td>
+                            <td><strong>{{ order.total_amount|currency }}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            
+            <div class="confirmation-actions">
+                <a href="{{ url_for('track_order', order_number=order.order_number, email=order.customer_email) }}" class="btn btn-outline btn-large">
+                    <i class="fas fa-search"></i> Track This Order
+                </a>
+                <a href="{{ url_for('my_orders', email=order.customer_email) }}" class="btn btn-outline btn-large">
+                    <i class="fas fa-list"></i> View All My Orders
+                </a>
+                <a href="{{ url_for('index') }}" class="btn btn-primary btn-large">
+                    <i class="fas fa-home"></i> Continue Shopping
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    // Clear cart after order confirmation
+    localStorage.removeItem('cart');
+    updateCartCount();
+</script>
+{% endblock %}
+

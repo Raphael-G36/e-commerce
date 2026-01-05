@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}E-Commerce Store{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-wrapper">
+                <div class="logo">
+                    <a href="{{ url_for('index') }}">
+                        <i class="fas fa-shopping-bag"></i>
+                        <span>ShopHub</span>
+                    </a>
+                </div>
+                <ul class="nav-menu">
+                    <li><a href="{{ url_for('index') }}" class="nav-link">Home</a></li>
+                    <li><a href="{{ url_for('products') }}" class="nav-link">Products</a></li>
+                    <li><a href="{{ url_for('cart') }}" class="nav-link">Cart <span class="cart-count">0</span></a></li>
+                    <li><a href="{{ url_for('my_orders') }}" class="nav-link">My Orders</a></li>
+                    <li><a href="{{ url_for('track_order') }}" class="nav-link">Track Order</a></li>
+                    <li><a href="{{ url_for('contact') }}" class="nav-link">Contact</a></li>
+                    {% if session.get('is_admin') %}
+                    <li><a href="{{ url_for('admin_dashboard') }}" class="nav-link">Admin</a></li>
+                    {% endif %}
+                </ul>
+                <div class="nav-actions">
+                    <a href="{{ url_for('cart') }}" class="cart-icon">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-badge">0</span>
+                    </a>
+                    {% if session.get('user_id') %}
+                    <a href="{{ url_for('logout') }}" class="nav-link" style="margin-right: 1rem;">
+                        <i class="fas fa-sign-out-alt"></i> Logout ({{ session.get('username') }})
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('login') }}" class="nav-link" style="margin-right: 1rem;">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                    {% endif %}
+                    <button class="mobile-menu-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ category }}">
+                        <span>{{ message }}</span>
+                        <button class="flash-close" onclick="this.parentElement.remove()">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>ShopHub</h3>
+                    <p>Your one-stop shop for quality products at great prices.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="{{ url_for('index') }}">Home</a></li>
+                        <li><a href="{{ url_for('products') }}">Products</a></li>
+                        <li><a href="{{ url_for('cart') }}">Cart</a></li>
+                        <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Customer Service</h4>
+                    <ul>
+                        <li><a href="#">Shipping Info</a></li>
+                        <li><a href="#">Returns</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Newsletter</h4>
+                    <p>Subscribe to get updates on new products and special offers.</p>
+                    <form class="newsletter-form">
+                        <input type="email" placeholder="Your email" required>
+                        <button type="submit">Subscribe</button>
+                    </form>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 ShopHub. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Chatbot Widget -->
+    <div id="chatbot-widget">
+        <div id="chatbot-toggle" class="chatbot-toggle">
+            <i class="fas fa-comments"></i>
+            <span class="chatbot-badge" id="chatbot-badge" style="display: none;">1</span>
+        </div>
+        <div id="chatbot-container" class="chatbot-container" style="display: none;">
+            <div class="chatbot-header">
+                <div class="chatbot-header-info">
+                    <i class="fas fa-robot"></i>
+                    <div>
+                        <h3>ShopHub Assistant</h3>
+                        <p>How can I help you today?</p>
+                    </div>
+                </div>
+                <div class="chatbot-header-actions">
+                    <button id="chatbot-voice-toggle" class="chatbot-icon-btn voice-enabled" title="Toggle voice output">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                </div>
+                <button id="chatbot-close" class="chatbot-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="chatbot-messages" class="chatbot-messages">
+                <div class="chatbot-message bot-message">
+                    <div class="message-content">
+                        <p>Hello! I'm your ShopHub assistant. I can help you with product information, orders, shipping, and more. What can I help you with today?</p>
+                    </div>
+                </div>
+            </div>
+            <div class="chatbot-input-container">
+                <button id="chatbot-voice-btn" class="chatbot-voice-btn" title="Click to use voice input">
+                    <i class="fas fa-microphone-alt"></i>
+                </button>
+                <input type="text" id="chatbot-input" class="chatbot-input" placeholder="Type or use voice...">
+                <button id="chatbot-send" class="chatbot-send">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
+

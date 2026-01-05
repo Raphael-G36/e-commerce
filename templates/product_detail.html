@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} - ShopHub{% endblock %}
+
+{% block content %}
+<section class="product-detail-section">
+    <div class="container">
+        <div class="product-detail">
+            <div class="product-detail-image">
+                <img src="{{ product.image }}" alt="{{ product.name }}">
+            </div>
+            <div class="product-detail-info">
+                <h1>{{ product.name }}</h1>
+                <p class="product-detail-category">{{ product.category }}</p>
+                <div class="product-detail-price">{{ product.price|currency }}</div>
+                <p class="product-detail-description">
+                    {% if product.description %}
+                        {{ product.description }}
+                    {% else %}
+                        This is a high-quality product that meets all your needs. Made with premium materials 
+                        and designed for durability and style. Perfect for everyday use.
+                    {% endif %}
+                </p>
+                <div class="stock-info-wrapper">
+                    {% if product.stock > 0 %}
+                    <p class="stock-info in-stock">
+                        <i class="fas fa-check-circle"></i> In Stock ({{ product.stock }} available)
+                    </p>
+                    {% else %}
+                    <p class="stock-info out-of-stock">
+                        <i class="fas fa-times-circle"></i> Out of Stock
+                    </p>
+                    {% endif %}
+                    {% if product.featured %}
+                    <span class="featured-badge-inline">
+                        <i class="fas fa-star"></i> Featured Product
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="product-actions">
+                    <div class="quantity-selector">
+                        <button class="quantity-btn" onclick="decreaseQuantity()">-</button>
+                        <input type="number" id="quantity" value="1" min="1" max="{{ product.stock if product.stock > 0 else 1 }}" readonly>
+                        <button class="quantity-btn" onclick="increaseQuantity()" {% if product.stock == 0 %}disabled{% endif %}>+</button>
+                    </div>
+                    <button class="btn btn-primary btn-large" onclick="addToCartWithQuantity({{ product.id }})" {% if product.stock == 0 %}disabled{% endif %}>
+                        <i class="fas fa-cart-plus"></i> {% if product.stock == 0 %}Out of Stock{% else %}Add to Cart{% endif %}
+                    </button>
+                </div>
+                <div class="product-features">
+                    <h3>Features</h3>
+                    <ul>
+                        <li><i class="fas fa-check"></i> Premium Quality</li>
+                        <li><i class="fas fa-check"></i> Fast Shipping</li>
+                        <li><i class="fas fa-check"></i> 30-Day Return Policy</li>
+                        <li><i class="fas fa-check"></i> 1-Year Warranty</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function increaseQuantity() {
+        const input = document.getElementById('quantity');
+        const max = parseInt(input.getAttribute('max')) || 999;
+        const current = parseInt(input.value);
+        if (current < max) {
+            input.value = current + 1;
+        }
+    }
+    
+    function decreaseQuantity() {
+        const input = document.getElementById('quantity');
+        if (parseInt(input.value) > 1) {
+            input.value = parseInt(input.value) - 1;
+        }
+    }
+    
+    function addToCartWithQuantity(productId) {
+        const quantity = parseInt(document.getElementById('quantity').value);
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        
+        const existingItem = cart.find(item => item.id === productId);
+        
+        if (existingItem) {
+            existingItem.quantity += quantity;
+        } else {
+            cart.push({ id: productId, quantity: quantity });
+        }
+        
+        localStorage.setItem('cart', JSON.stringify(cart));
+        updateCartCount();
+        showNotification('Product added to cart!');
+    }
+</script>
+{% endblock %}
+

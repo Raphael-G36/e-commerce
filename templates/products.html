@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Products - ShopHub{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1>All Products</h1>
+        <p>Browse our complete collection</p>
+    </div>
+</section>
+
+<section class="products-section">
+    <div class="container">
+        <!-- Search Bar -->
+        <div class="search-section">
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    id="productSearch" 
+                    class="search-input" 
+                    placeholder="Search products... "
+                    autocomplete="off"
+                >
+                <i class="fas fa-search search-icon"></i>
+                <button class="search-clear-btn" id="clearSearch" style="display: none;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Category Filter -->
+        <div class="category-filters">
+            <a href="{{ url_for('products') }}" class="filter-btn {% if not request.args.get('category') %}active{% endif %}">
+                All Products
+            </a>
+            <a href="{{ url_for('products', category='Electronics') }}" class="filter-btn {% if request.args.get('category') == 'Electronics' %}active{% endif %}">
+                Electronics
+            </a>
+            <a href="{{ url_for('products', category='Fashion') }}" class="filter-btn {% if request.args.get('category') == 'Fashion' %}active{% endif %}">
+                Fashion
+            </a>
+            <a href="{{ url_for('products', category='Sports') }}" class="filter-btn {% if request.args.get('category') == 'Sports' %}active{% endif %}">
+                Sports
+            </a>
+            <a href="{{ url_for('products', category='Home') }}" class="filter-btn {% if request.args.get('category') == 'Home' %}active{% endif %}">
+                Home & Living
+            </a>
+        </div>
+
+        <!-- Products Count -->
+        <p class="products-count">
+            <span id="productCount">{{ products|length }}</span> product{{ 's' if products|length != 1 else '' }} found
+        </p>
+
+        <!-- Products Grid -->
+        {% if products %}
+        <div class="products-grid" id="productsGrid">
+            {% for product in products %}
+            <div class="product-card" data-product-name="{{ product.name.lower() }}" data-product-category="{{ product.category.lower() }}" data-product-id="{{ product.id }}">
+                {% if product.featured %}
+                <span class="featured-badge">Featured</span>
+                {% endif %}
+                <div class="product-image">
+                    <img src="{{ product.image }}" alt="{{ product.name }}">
+                    <div class="product-overlay">
+                        <a href="{{ url_for('product_detail', id=product.id) }}" class="btn btn-primary">View Details</a>
+                    </div>
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">{{ product.name }}</h3>
+                    <p class="product-category">{{ product.category }}</p>
+                    <div class="product-footer">
+                        <div>
+                            <span class="product-price">{{ product.price|currency }}</span>
+                            {% if product.stock > 0 %}
+                            <span class="stock-badge in-stock">
+                                <i class="fas fa-check-circle"></i> In Stock
+                            </span>
+                            {% else %}
+                            <span class="stock-badge out-of-stock">
+                                <i class="fas fa-times-circle"></i> Out of Stock
+                            </span>
+                            {% endif %}
+                        </div>
+                        <button class="btn btn-cart" onclick="addToCart({{ product.id }})" {% if product.stock == 0 %}disabled title="Out of stock"{% endif %}>
+                            <i class="fas fa-cart-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-products" id="noProducts">
+            <i class="fas fa-box-open"></i>
+            <h2>No products found</h2>
+            <p>We couldn't find any products matching your search.</p>
+            <a href="{{ url_for('products') }}" class="btn btn-primary">View All Products</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<script>
+// Dynamic product search functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('productSearch');
+    const clearBtn = document.getElementById('clearSearch');
+    const productsGrid = document.getElementById('productsGrid');
+    const productCards = document.querySelectorAll('.product-card');
+    const noProductsMessage = document.getElementById('noProducts');
+    const productCount = document.getElementById('productCount');
+
+    // Real-time search as user types
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        
+        // Show/hide clear button
+        clearBtn.style.display = searchTerm ? 'block' : 'none';
+        
+        let visibleCount = 0;
+        
+        // Filter products
+        productCards.forEach(card => {
+            const productName = card.dataset.productName;
+            const productCategory = card.dataset.productCategory;
+            
+            // Check if search term matches product name or category
+            const matches = productName.includes(searchTerm) || productCategory.includes(searchTerm);
+            
+            if (matches) {
+                card.style.display = 'block';
+                card.classList.add('search-match');
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+                card.classList.remove('search-match');
+            }
+        });
+        
+        // Update product count
+        productCount.textContent = visibleCount;
+        
+        // Show/hide no products message
+        if (visibleCount === 0) {
+            if (noProductsMessage) {
+                noProductsMessage.style.display = 'block';
+            }
+            if (productsGrid) {
+                productsGrid.style.display = 'none';
+            }
+        } else {
+            if (noProductsMessage) {
+                noProductsMessage.style.display = 'none';
+            }
+            if (productsGrid) {
+                productsGrid.style.display = 'grid';
+            }
+        }
+    });
+    
+    // Clear search button
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            searchInput.focus();
+            
+            // Trigger input event to reset display
+            const event = new Event('input', { bubbles: true });
+            searchInput.dispatchEvent(event);
+        });
+    }
+    
+    // Allow clearing search with Escape key
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            searchInput.value = '';
+            const event = new Event('input', { bubbles: true });
+            searchInput.dispatchEvent(event);
+        }
+    });
+});
+</script>
+{% endblock %}
+

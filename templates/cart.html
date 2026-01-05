@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping Cart - ShopHub{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1>Shopping Cart</h1>
+        <p>Review your items</p>
+    </div>
+</section>
+
+<section class="cart-section">
+    <div class="container">
+        <div id="cart-content">
+            <div class="cart-empty">
+                <i class="fas fa-shopping-cart"></i>
+                <h2>Your cart is empty</h2>
+                <p>Add some products to get started!</p>
+                <a href="{{ url_for('products') }}" class="btn btn-primary">Continue Shopping</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCart();
+    });
+    
+    async function loadCart() {
+        const cart = JSON.parse(localStorage.getItem('cart')) || [];
+        const cartContent = document.getElementById('cart-content');
+        
+        if (cart.length === 0) {
+            cartContent.innerHTML = `
+                <div class="cart-empty">
+                    <i class="fas fa-shopping-cart"></i>
+                    <h2>Your cart is empty</h2>
+                    <p>Add some products to get started!</p>
+                    <a href="{{ url_for('products') }}" class="btn btn-primary">Continue Shopping</a>
+                </div>
+            `;
+            return;
+        }
+        
+        // Fetch product details for items in cart
+        try {
+            const productIds = cart.map(item => item.id).join(',');
+            const response = await fetch(`/api/cart-products?ids=${productIds}`);
+            const products = await response.json();
+            
+            let total = 0;
+            let cartHTML = `
+                <div class="cart-items">
+                    <table class="cart-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Total</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            cart.forEach(cartItem => {
+                const product = products.find(p => p.id === cartItem.id);
+                if (product) {
+                    const itemTotal = product.price * cartItem.quantity;
+                    total += itemTotal;
+                    cartHTML += `
+                        <tr>
+                            <td>
+                                <div class="cart-item-info">
+                                    <img src="${product.image}" alt="${product.name}" class="cart-item-image">
+                                    <div>
+                                        <h4>${product.name}</h4>
+                                        <p class="cart-item-category">${product.category}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>₦${product.price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td>
+                                <div class="quantity-selector-small">
+                                    <button class="quantity-btn" onclick="updateCartQuantity(${product.id}, ${cartItem.quantity - 1})">-</button>
+                                    <span>${cartItem.quantity}</span>
+                                    <button class="quantity-btn" onclick="updateCartQuantity(${product.id}, ${cartItem.quantity + 1})">+</button>
+                                </div>
+                            </td>
+                            <td>₦${itemTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td>
+                                <button class="btn-remove" onclick="removeFromCart(${product.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+            
+            cartHTML += `
+                        </tbody>
+                    </table>
+                    <div class="cart-summary">
+                        <div class="cart-total">
+                            <h3>Total: ₦${total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</h3>
+                        </div>
+                        <div class="cart-actions">
+                            <a href="{{ url_for('products') }}" class="btn btn-outline">Continue Shopping</a>
+                            <button class="btn btn-primary btn-large" onclick="checkout()">Proceed to Checkout</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            cartContent.innerHTML = cartHTML;
+        } catch (error) {
+            console.error('Error loading cart:', error);
+            cartContent.innerHTML = `
+                <div class="cart-empty">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h2>Error loading cart</h2>
+                    <p>Please try again later.</p>
+                    <a href="{{ url_for('products') }}" class="btn btn-primary">Continue Shopping</a>
+                </div>
+            `;
+        }
+    }
+    
+    function updateCartQuantity(productId, newQuantity) {
+        if (newQuantity < 1) {
+            removeFromCart(productId);
+            return;
+        }
+        
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        const item = cart.find(item => item.id === productId);
+        if (item) {
+            item.quantity = newQuantity;
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCount();
+            loadCart();
+        }
+    }
+    
+    function removeFromCart(productId) {
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        cart = cart.filter(item => item.id !== productId);
+        localStorage.setItem('cart', JSON.stringify(cart));
+        updateCartCount();
+        loadCart();
+    }
+    
+    function checkout() {
+        window.location.href = '{{ url_for("checkout") }}';
+    }
+</script>
+{% endblock %}
+

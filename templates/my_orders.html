@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}My Orders - ShopHub{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1>My Orders</h1>
+        <p>View all your orders</p>
+    </div>
+</section>
+
+<section class="my-orders-section">
+    <div class="container">
+        {% if not email %}
+        <div class="orders-search-card">
+            <h2>Find Your Orders</h2>
+            <p style="color: var(--text-light); margin-bottom: 2rem;">
+                Enter your email address to view all your orders.
+            </p>
+            
+            {% if error %}
+            <div class="alert alert-error">
+                <i class="fas fa-exclamation-circle"></i> {{ error }}
+            </div>
+            {% endif %}
+            
+            <form method="POST" class="orders-search-form">
+                <div class="form-group">
+                    <label for="email">Email Address *</label>
+                    <input type="email" id="email" name="email" 
+                           placeholder="your.email@example.com" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-large" style="width: 100%;">
+                    <i class="fas fa-search"></i> View My Orders
+                </button>
+            </form>
+        </div>
+        {% else %}
+        <div class="orders-header">
+            <div>
+                <h2>Your Orders</h2>
+                <p style="color: var(--text-light); margin-top: 0.5rem;">
+                    Orders for: <strong>{{ email }}</strong>
+                </p>
+            </div>
+            <a href="{{ url_for('my_orders') }}" class="btn btn-outline">
+                <i class="fas fa-search"></i> Search Different Email
+            </a>
+        </div>
+        
+        {% if error %}
+        <div class="alert alert-error">
+            <i class="fas fa-exclamation-circle"></i> {{ error }}
+        </div>
+        {% elif orders %}
+        <div class="orders-list">
+            {% for order in orders %}
+            <div class="order-card">
+                <div class="order-card-header">
+                    <div class="order-card-info">
+                        <div class="order-number-large">{{ order.order_number }}</div>
+                        <div class="order-date">
+                            <i class="fas fa-calendar"></i> 
+                            {{ order.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                        </div>
+                    </div>
+                    <div class="order-status-badges">
+                        <span class="status-badge {{ order.payment_status }}">
+                            {{ order.payment_status.title() }}
+                        </span>
+                        <span class="status-badge {{ order.status }}">
+                            {{ order.status.title() }}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="order-card-body">
+                    <div class="order-items-preview">
+                        {% for item in order.items[:3] %}
+                        <div class="order-item-preview">
+                            <span class="item-name">{{ item.product_name }}</span>
+                            <span class="item-quantity">× {{ item.quantity }}</span>
+                        </div>
+                        {% endfor %}
+                        {% if order.items|length > 3 %}
+                        <div class="order-item-preview">
+                            <span class="item-name">+ {{ order.items|length - 3 }} more item(s)</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="order-card-footer">
+                        <div class="order-total">
+                            <span>Total:</span>
+                            <span class="total-amount">{{ order.total_amount|currency }}</span>
+                        </div>
+                        <a href="{{ url_for('track_order') }}?order_number={{ order.order_number }}&email={{ email }}" 
+                           class="btn btn-outline btn-small">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-shopping-bag"></i>
+            <h3>No Orders Found</h3>
+            <p>You haven't placed any orders yet.</p>
+            <a href="{{ url_for('products') }}" class="btn btn-primary">
+                <i class="fas fa-shopping-bag"></i> Start Shopping
+            </a>
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+
