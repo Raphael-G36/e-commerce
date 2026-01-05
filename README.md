@@ -1,94 +1,174 @@
-# E-Commerce Site with SQLAlchemy
+# E-Commerce Site (Flask + SQLAlchemy)
 
-A modern e-commerce website built with Flask and SQLAlchemy.
+Lightweight e-commerce demo built with Flask and SQLAlchemy.
 
-## Features
+## Quick setup & run
 
-- **Database-driven products** using SQLAlchemy
-- **Product management** with categories, pricing, stock, and featured products
-- **Dynamic product listing** with category filtering
-- **Product detail pages** with descriptions and stock information
-- **Shopping cart** functionality (client-side)
-- **Responsive design** for all devices
+1) Create a virtual environment (recommended)
 
-## Setup
+Windows (PowerShell):
 
-1. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. **Initialize the database:**
-   The database will be automatically created and seeded when you first run the app. Alternatively, you can run:
-   ```bash
-   python init_db.py
-   ```
-
-3. **Run the application:**
-   ```bash
-   python app.py
-   ```
-
-4. **Access the site:**
-   Open your browser and go to `http://localhost:5000`
-
-## Database
-
-- **Database file:** `ecommerce.db` (SQLite)
-- **Model:** `Product` (defined in `models.py`)
-- **Initial data:** 10 sample products are automatically seeded on first run
-
-## Project Structure
-
-```
-e-commerce/
-├── app.py              # Main Flask application
-├── models.py           # SQLAlchemy models
-├── init_db.py          # Database initialization script
-├── requirements.txt    # Python dependencies
-├── templates/          # Jinja2 templates
-│   ├── base.html
-│   ├── index.html
-│   ├── products.html
-│   ├── product_detail.html
-│   ├── cart.html
-│   └── contact.html
-├── static/
-│   ├── css/
-│   │   └── style.css
-│   └── js/
-│       └── main.js
-└── ecommerce.db        # SQLite database (created automatically)
+```powershell
+python -m venv .venv
+.\\.venv\\Scripts\\Activate.ps1
 ```
 
-## Adding Products
+macOS / Linux / Git Bash:
 
-You can add products programmatically or through the database:
-
-```python
-from app import app
-from models import db, Product
-
-with app.app_context():
-    new_product = Product(
-        name='New Product',
-        description='Product description',
-        category='Electronics',
-        price=99.99,
-        image='https://example.com/image.jpg',
-        stock=50,
-        featured=True
-    )
-    db.session.add(new_product)
-    db.session.commit()
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
 ```
 
-## Routes
+2) Install dependencies
 
-- `/` - Homepage with featured products
-- `/products` - All products (with optional `?category=CategoryName` filter)
-- `/product/<id>` - Product detail page
-- `/cart` - Shopping cart
-- `/contact` - Contact page
+```bash
+pip install -r requirements.txt
+```
+
+3) Initialize the database (optional — app may auto-create on first run)
+
+```bash
+python init_db.py
+```
+
+4) Run the app
+
+```bash
+python app.py
+```
+
+Open http://localhost:5000 in your browser.
+
+### Notes
+- If you prefer `flask run`, set `FLASK_APP=app.py` and `FLASK_ENV=development`.
+- Put environment variables and secrets in a local `.env` file (this project ignores `.env`).
+
+### Project layout (important files)
+
+- `app.py` — Flask application entry
+- `models.py` — SQLAlchemy models and DB setup
+- `init_db.py` — helper to (re)create and seed the DB
+- `requirements.txt` — Python dependencies
+- `templates/` and `static/` — frontend assets and templates
+
+### Common tasks
+- Re-seed DB: `python init_db.py`
+- Update product prices script: `python update_prices.py`
+
+### Development tips
+- Use a virtual environment per project to avoid global package conflicts.
+- The repository `.gitignore` excludes local envs, IDE settings, and secrets.
+
+Need anything else (deploy steps, Dockerfile, CI)? Open an issue or ask here.
+
+# E-Commerce Site (Flask + SQLAlchemy)
+
+Lightweight e-commerce demo built with Flask and SQLAlchemy.
+
+## Quick setup & run
+
+1) Create a virtual environment (recommended)
+
+Windows (PowerShell):
+
+```powershell
+python -m venv .venv
+.\\.venv\\Scripts\\Activate.ps1
+```
+
+macOS / Linux / Git Bash:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+2) Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+3) Initialize the database (optional — app may auto-create on first run)
+
+```bash
+python init_db.py
+```
+
+4) Run the app
+
+```bash
+python app.py
+```
+
+Open http://localhost:5000 in your browser.
+
+### Notes
+- If you prefer `flask run`, set `FLASK_APP=app.py` and `FLASK_ENV=development`.
+- Put environment variables and secrets in a local `.env` file (this project ignores `.env`).
+
+### Project layout (important files)
+
+- `app.py` — Flask application entry
+- `models.py` — SQLAlchemy models and DB setup
+- `init_db.py` — helper to (re)create and seed the DB
+- `requirements.txt` — Python dependencies
+- `templates/` and `static/` — frontend assets and templates
+
+### Common tasks
+- Re-seed DB: `python init_db.py`
+- Update product prices script: `python update_prices.py`
+
+### Development tips
+- Use a virtual environment per project to avoid global package conflicts.
+- The repository `.gitignore` excludes local envs, IDE settings, and secrets.
+
+Need anything else (deploy steps, Dockerfile, CI)? Open an issue or ask here.
+
+2) Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+3) Initialize the database (optional — app may auto-create on first run)
+
+```bash
+python init_db.py
+```
+
+4) Run the app
+
+```bash
+python app.py
+```
+
+Open http://localhost:5000 in your browser.
+
+Notes
+- If you prefer `flask run`, set `FLASK_APP=app.py` and `FLASK_ENV=development`.
+- Environment variables and secrets should go in a local `.env` file (already ignored by `.gitignore`).
+
+Project layout (important files)
+
+- `app.py` — Flask application entry
+- `models.py` — SQLAlchemy models and DB setup
+- `init_db.py` — helper to (re)create and seed the DB
+- `requirements.txt` — Python dependencies
+- `templates/` and `static/` — frontend assets and templates
+
+Database
+- By default the project uses SQLite (a `.db` file in project root). Change DB settings in `app.py` or `models.py` if needed.
+
+Common tasks
+- Re-seed DB: `python init_db.py`
+- Update product prices script: `python update_prices.py`
+
+Development tips
+- Use a virtual environment per project to avoid global package conflicts.
+- The repository `.gitignore` excludes local envs, IDE settings, and secrets.
+
+Need anything else (deploy steps, Dockerfile, CI)? Open an issue or ask here.
 
 
